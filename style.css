@@ -730,10 +730,12 @@ body {
 }
 
 .input-group-highlight {
-    background: linear-gradient(135deg, rgba(255, 59, 48, 0.02), rgba(255, 59, 48, 0.05));
+    background: linear-gradient(135deg, rgba(0, 113, 227, 0.03), rgba(0, 113, 227, 0.08));
     margin: 0;
     padding: 10px 12px;
     border-radius: var(--radius);
+    border: 1px solid rgba(0, 113, 227, 0.18);
+    box-shadow: 0 0 0 1px rgba(0, 113, 227, 0.08), 0 4px 12px rgba(0, 113, 227, 0.08);
     border-bottom: none;
 }
 
@@ -1442,11 +1444,12 @@ body {
    ============================================ */
 
 [data-field] {
-    transition: box-shadow 0.18s ease;
+    transition: box-shadow 0.18s ease, background 0.18s ease;
 }
 
 [data-field].factor-highlight {
-    box-shadow: 0 0 0 2px rgba(100, 100, 105, 0.65);
+    background: linear-gradient(135deg, rgba(0, 113, 227, 0.03), rgba(0, 113, 227, 0.08));
+    box-shadow: 0 0 0 2px rgba(0, 113, 227, 0.55), 0 0 12px rgba(0, 113, 227, 0.25);
     border-radius: var(--radius);
 }
 
