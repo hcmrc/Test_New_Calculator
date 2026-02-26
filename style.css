@@ -1,0 +1,1954 @@
+/* ============================================
+   DIABETES RISK CALCULATOR – 3-COLUMN INTERCONNECTED DESIGN
+   ============================================
+   Design Philosophy:
+   - Three-column "Input -> Model -> Output" data-flow layout
+   - Dynamic risk-colored borders on Input & Treatment panels
+   - Flow arrows and visual connectors between columns
+   - Apple-inspired aesthetic with frosted glass, subtle shadows
+   - Clear visual mapping: left inputs feed center model, which drives right treatments
+   ============================================ */
+
+
+/* ============================================
+   1. CSS CUSTOM PROPERTIES
+   ============================================ */
+
+:root {
+    /* Primary */
+    --blue:           #0071e3;
+    --blue-hover:     #0077ED;
+    --blue-light:     rgba(0, 113, 227, 0.08);
+    --blue-glow:      rgba(0, 113, 227, 0.15);
+
+    /* Semantic Status */
+    --safe:           #34c759;
+    --safe-light:     rgba(52, 199, 89, 0.10);
+    --safe-border:    rgba(52, 199, 89, 0.45);
+    --alert:          #ff9f0a;
+    --alert-light:    rgba(255, 159, 10, 0.10);
+    --alert-border:   rgba(255, 159, 10, 0.50);
+    --warning:        #ff6723;
+    --warning-light:  rgba(255, 103, 35, 0.10);
+    --warning-border: rgba(255, 103, 35, 0.55);
+    --danger:         #ff3b30;
+    --danger-light:   rgba(255, 59, 48, 0.10);
+    --danger-border:  rgba(255, 59, 48, 0.55);
+
+    /* Text */
+    --text-primary:   #1d1d1f;
+    --text-secondary: #6e6e73;
+    --text-tertiary:  #86868b;
+
+    /* Backgrounds */
+    --bg-page:        #f5f5f7;
+    --bg-card:        #ffffff;
+    --bg-elevated:    #fbfbfd;
+    --bg-frosted:     rgba(255, 255, 255, 0.72);
+
+    /* Borders & Shadows */
+    --border:         rgba(0, 0, 0, 0.06);
+    --border-strong:  rgba(0, 0, 0, 0.1);
+    --shadow-sm:      0 1px 3px rgba(0, 0, 0, 0.04);
+    --shadow:         0 2px 8px rgba(0, 0, 0, 0.06);
+    --shadow-md:      0 4px 16px rgba(0, 0, 0, 0.08);
+    --shadow-lg:      0 8px 32px rgba(0, 0, 0, 0.1);
+    --shadow-card:    0 2px 12px rgba(0, 0, 0, 0.06), 0 0 1px rgba(0, 0, 0, 0.08);
+
+    /* Radii */
+    --radius-sm:      8px;
+    --radius:         12px;
+    --radius-lg:      16px;
+    --radius-xl:      20px;
+    --radius-2xl:     24px;
+
+    /* Layout */
+    --content-padding: 20px;
+    --grid-gap:       20px;
+
+    /* Transitions */
+    --ease-out:       cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    --ease-spring:    cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+
+/* ============================================
+   2. RESET / BASE
+   ============================================ */
+
+*,
+*::before,
+*::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Inter', 'Helvetica Neue', sans-serif;
+    background: var(--bg-page);
+    color: var(--text-primary);
+    line-height: 1.47059;
+    font-size: 15px;
+    letter-spacing: -0.022em;
+    min-height: 100vh;
+}
+
+
+/* ============================================
+   3. TOP NAVIGATION
+   ============================================ */
+
+.top-nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--bg-frosted);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border-bottom: 1px solid var(--border);
+}
+
+.nav-inner {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 0 var(--content-padding);
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    color: var(--text-primary);
+}
+
+.nav-brand .material-icons-round {
+    font-size: 20px;
+    color: var(--blue);
+}
+
+.nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Unit toggle in nav */
+.unit-toggle-nav {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    background: rgba(0, 0, 0, 0.03);
+    border-radius: 20px;
+}
+
+.toggle-label-nav {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-tertiary);
+    transition: color 0.2s;
+}
+
+.toggle-label-nav:first-child {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.toggle-switch-nav {
+    position: relative;
+    display: inline-block;
+    width: 32px;
+    height: 18px;
+}
+
+.toggle-switch-nav input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-track-nav {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background: #e5e5ea;
+    transition: background 0.3s;
+    border-radius: 18px;
+}
+
+.toggle-track-nav::before {
+    content: "";
+    position: absolute;
+    height: 14px;
+    width: 14px;
+    left: 2px;
+    bottom: 2px;
+    background: white;
+    transition: transform 0.3s var(--ease-spring);
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.toggle-switch-nav input:checked + .toggle-track-nav {
+    background: var(--blue);
+}
+
+.toggle-switch-nav input:checked + .toggle-track-nav::before {
+    transform: translateX(14px);
+}
+
+.btn-reset {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.04);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+}
+
+.btn-reset:hover {
+    background: rgba(0, 0, 0, 0.08);
+    transform: rotate(-45deg);
+}
+
+.btn-reset .material-icons-round {
+    font-size: 18px;
+}
+
+
+/* ============================================
+   4. HERO SECTION – COMPACT RISK DISPLAY
+   ============================================ */
+
+.hero-section {
+    background: var(--bg-card);
+    padding: 20px var(--content-padding) 16px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.5s ease, box-shadow 0.5s ease;
+}
+
+.hero-inner {
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
+.hero-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 4px;
+}
+
+.hero-value {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    margin-bottom: 12px;
+}
+
+.risk-number {
+    font-size: 64px;
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    transition: color 0.4s ease;
+    color: var(--safe);
+}
+
+.risk-unit {
+    font-size: 32px;
+    font-weight: 600;
+    transition: color 0.4s ease;
+    color: var(--safe);
+    margin-left: 2px;
+}
+
+/* Risk bar visualization */
+.hero-risk-bar {
+    max-width: 400px;
+    margin: 0 auto 8px;
+}
+
+.risk-bar-track {
+    position: relative;
+    height: 5px;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--safe) 0%, var(--alert) 33%, var(--warning) 66%, var(--danger) 100%);
+    overflow: visible;
+}
+
+.risk-bar-marker {
+    position: absolute;
+    top: 50%;
+    left: 0%;
+    transform: translate(-50%, -50%);
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: white;
+    border: 3px solid var(--safe);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    transition: left 0.5s var(--ease-out), border-color 0.4s ease;
+    z-index: 2;
+}
+
+.risk-bar-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 4px;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text-tertiary);
+}
+
+.hero-subtitle {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    margin-top: 4px;
+}
+
+/* Icon Array (Pictograph) */
+.icon-array-container {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 4px;
+    margin: 12px auto;
+    width: fit-content;
+    padding: 16px;
+    background: var(--bg-elevated);
+    border-radius: var(--radius);
+}
+
+.icon-array-item {
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: #e5e5ea;
+    transition: background 0.3s ease, transform 0.2s ease;
+    cursor: default;
+}
+
+.icon-array-item.affected {
+    background: linear-gradient(135deg, #ff6b6b, #ff3b30);
+    box-shadow: 0 2px 6px rgba(255, 59, 48, 0.3);
+}
+
+.icon-array-item:hover {
+    transform: scale(1.2);
+}
+
+.icon-array-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin: 8px 0 12px;
+    text-align: center;
+    font-weight: 500;
+}
+
+/* Expand Hero Button */
+.btn-expand-hero {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--blue);
+    background: var(--blue-light);
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    margin: 4px auto 0;
+    transition: background 0.2s, transform 0.2s;
+}
+
+.btn-expand-hero:hover {
+    background: var(--blue-glow);
+    transform: translateY(-1px);
+}
+
+.btn-expand-hero .material-icons-round {
+    font-size: 15px;
+}
+
+.expand-hero-chevron {
+    transition: transform 0.35s ease;
+}
+
+.btn-expand-hero.open .expand-hero-chevron {
+    transform: rotate(180deg);
+}
+
+/* Expandable hero section */
+.hero-expandable {
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    transition: max-height 0.45s ease, opacity 0.35s ease;
+}
+
+.hero-expandable.open {
+    max-height: 600px;
+    opacity: 1;
+}
+
+/* Compare Scenario Button */
+.btn-compare-scenario {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--blue);
+    background: var(--blue-light);
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+    margin: 0 auto;
+}
+
+.btn-compare-scenario:hover {
+    background: var(--blue-glow);
+    transform: translateY(-1px);
+}
+
+.btn-compare-scenario .material-icons-round {
+    font-size: 16px;
+}
+
+.scenario-comparison-panel {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin: 12px 0;
+    padding: 12px 16px;
+    background: rgba(0, 113, 227, 0.05);
+    border-radius: var(--radius);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.scenario-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.scenario-label {
+    font-size: 10px;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.scenario-value {
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.scenario-item.baseline .scenario-value {
+    color: var(--text-primary);
+}
+
+.scenario-item.current .scenario-value {
+    color: var(--blue);
+}
+
+.scenario-delta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 12px;
+}
+
+.scenario-delta-value {
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.scenario-delta-value.improved {
+    color: var(--safe);
+}
+
+.scenario-delta-value.worsened {
+    color: var(--danger);
+}
+
+/* Risk level background glow on hero */
+.hero-section[data-risk-level="safe"] {
+    background: linear-gradient(180deg, rgba(52, 199, 89, 0.05) 0%, var(--bg-card) 100%);
+}
+.hero-section[data-risk-level="alert"] {
+    background: linear-gradient(180deg, rgba(255, 159, 10, 0.05) 0%, var(--bg-card) 100%);
+}
+.hero-section[data-risk-level="warning"] {
+    background: linear-gradient(180deg, rgba(255, 103, 35, 0.05) 0%, var(--bg-card) 100%);
+}
+.hero-section[data-risk-level="danger"] {
+    background: linear-gradient(180deg, rgba(255, 59, 48, 0.05) 0%, var(--bg-card) 100%);
+}
+
+
+/* ============================================
+   5. COLUMN STEP LABELS  (Input / Model / Possible Treatment)
+   ============================================ */
+
+.col-step-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 18px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-tertiary);
+    background: var(--bg-elevated);
+    border-bottom: 1px solid var(--border);
+}
+
+.step-arrow {
+    font-size: 16px;
+    color: var(--text-tertiary);
+    animation: pulse-arrow 2s ease-in-out infinite;
+}
+
+@keyframes pulse-arrow {
+    0%, 100% { opacity: 0.4; transform: translateX(0); }
+    50%      { opacity: 1;   transform: translateX(3px); }
+}
+
+
+/* ============================================
+   6. THREE-COLUMN MAIN GRID
+   ============================================ */
+
+.main-grid {
+    display: grid;
+    grid-template-columns: minmax(340px, 1.05fr) minmax(360px, 1.25fr) minmax(320px, 1fr);
+    gap: var(--grid-gap);
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 0 var(--content-padding) 40px;
+    align-items: start;
+}
+
+
+/* ============================================
+   7. COLUMN PANELS – with dynamic risk borders
+   ============================================ */
+
+.col-panel {
+    background: var(--bg-card);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+    border: 2px solid transparent;
+    transition: border-color 0.5s ease, box-shadow 0.5s ease;
+}
+
+/* --- Dynamic Risk-Level Borders on INPUT panel --- */
+#panel-input {
+    overflow: hidden;
+}
+
+#panel-input[data-risk-level="safe"] {
+    border-color: var(--safe-border);
+    box-shadow: var(--shadow-card), 0 0 0 1px var(--safe-light);
+}
+#panel-input[data-risk-level="alert"] {
+    border-color: var(--alert-border);
+    box-shadow: var(--shadow-card), 0 0 0 1px var(--alert-light);
+}
+#panel-input[data-risk-level="warning"] {
+    border-color: var(--warning-border);
+    box-shadow: var(--shadow-card), 0 0 0 1px var(--warning-light);
+}
+#panel-input[data-risk-level="danger"] {
+    border-color: var(--danger-border);
+    box-shadow: var(--shadow-card), 0 0 12px var(--danger-light);
+}
+
+/* --- Dynamic Risk-Level Borders on TREATMENT panel --- */
+#panel-treatment[data-risk-level="safe"] {
+    border-color: var(--safe-border);
+    box-shadow: var(--shadow-card), 0 0 0 1px var(--safe-light);
+}
+#panel-treatment[data-risk-level="alert"] {
+    border-color: var(--alert-border);
+    box-shadow: var(--shadow-card), 0 0 0 1px var(--alert-light);
+}
+#panel-treatment[data-risk-level="warning"] {
+    border-color: var(--warning-border);
+    box-shadow: var(--shadow-card), 0 0 0 1px var(--warning-light);
+}
+#panel-treatment[data-risk-level="danger"] {
+    border-color: var(--danger-border);
+    box-shadow: var(--shadow-card), 0 0 12px var(--danger-light);
+}
+
+/* Center (model) panel has a subtle static blue border */
+#panel-model {
+    border-color: rgba(0, 113, 227, 0.15);
+}
+
+
+/* ============================================
+   8. PANEL HEADER BAR
+   ============================================ */
+
+.panel-header-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-elevated);
+}
+
+.panel-header-bar .material-icons-round {
+    font-size: 20px;
+    color: var(--blue);
+}
+
+.panel-header-bar h2 {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+/* Risk-colored top accent bar on panels */
+#panel-input .panel-header-bar {
+    border-top: 3px solid var(--safe);
+    transition: border-top-color 0.5s ease;
+}
+#panel-input[data-risk-level="safe"] .panel-header-bar    { border-top-color: var(--safe); }
+#panel-input[data-risk-level="alert"] .panel-header-bar   { border-top-color: var(--alert); }
+#panel-input[data-risk-level="warning"] .panel-header-bar { border-top-color: var(--warning); }
+#panel-input[data-risk-level="danger"] .panel-header-bar  { border-top-color: var(--danger); }
+
+#panel-treatment .panel-header-bar {
+    border-top: 3px solid var(--safe);
+    transition: border-top-color 0.5s ease;
+}
+#panel-treatment[data-risk-level="safe"] .panel-header-bar    { border-top-color: var(--safe); }
+#panel-treatment[data-risk-level="alert"] .panel-header-bar   { border-top-color: var(--alert); }
+#panel-treatment[data-risk-level="warning"] .panel-header-bar { border-top-color: var(--warning); }
+#panel-treatment[data-risk-level="danger"] .panel-header-bar  { border-top-color: var(--danger); }
+
+#panel-model .panel-header-bar {
+    border-top: 3px solid var(--blue);
+}
+
+
+/* ============================================
+   9. PANEL BODY
+   ============================================ */
+
+.panel-body {
+    padding: 16px;
+}
+
+/* Extra breathing room in Values panel to prevent slider thumb clipping */
+#panel-input .panel-body {
+    padding: 20px;
+}
+
+
+/* ============================================
+   10. INPUT SECTION LABELS (Non-Modifiable / Modifiable)
+   ============================================ */
+
+.input-section-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-tertiary);
+    padding: 8px 0 6px;
+    margin-top: 4px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 8px;
+}
+
+.input-section-label .material-icons-round {
+    font-size: 14px;
+}
+
+.input-section-label.modifiable {
+    color: var(--blue);
+    border-bottom-color: rgba(0, 113, 227, 0.15);
+    margin-top: 12px;
+}
+
+
+/* ============================================
+   11. INPUT GROUPS (compact for column)
+   ============================================ */
+
+.input-group {
+    padding: 12px 2px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.input-group:last-child {
+    border-bottom: none;
+}
+
+.input-group-highlight {
+    background: linear-gradient(135deg, rgba(0, 113, 227, 0.03), rgba(0, 113, 227, 0.08));
+    margin: 0;
+    padding: 10px 12px;
+    border-radius: var(--radius);
+    border: 1px solid rgba(0, 113, 227, 0.18);
+    box-shadow: 0 0 0 1px rgba(0, 113, 227, 0.08), 0 4px 12px rgba(0, 113, 227, 0.08);
+    border-bottom: none;
+}
+
+.input-label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+}
+
+.input-label-row label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    cursor: pointer;
+}
+
+.ig-icon {
+    font-size: 16px;
+    color: var(--blue);
+}
+
+.ig-icon.icon-danger { color: var(--danger); }
+.ig-icon.icon-safe   { color: var(--safe); }
+
+.unit-label {
+    font-weight: 400;
+    color: var(--text-tertiary);
+    font-size: 12px;
+}
+
+/* Strongest predictor badge */
+.strongest-badge {
+    display: inline-block;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--danger);
+    background: var(--danger-light);
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-bottom: 6px;
+}
+
+
+/* ============================================
+   12. SLIDERS (compact)
+   ============================================ */
+
+.slider-wrapper {
+    position: relative;
+    height: 18px;
+    padding: 0 14px;
+    overflow: visible;
+    margin: 4px 0;
+}
+
+.slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: auto;
+    height: 18px;
+    background: transparent;
+    outline: none;
+    position: absolute;
+    top: 0;
+    left: 14px;
+    right: 14px;
+    z-index: 2;
+    cursor: pointer;
+    margin: 0;
+}
+
+.slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: white;
+    cursor: pointer;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.04);
+    border: none;
+    transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.slider::-webkit-slider-thumb:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.06);
+    transform: scale(1.1);
+}
+
+.slider::-webkit-slider-thumb:active {
+    transform: scale(1.05);
+}
+
+.slider::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: white;
+    cursor: pointer;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.04);
+    border: none;
+}
+
+.slider-track-bg {
+    position: absolute;
+    top: 6px;
+    left: 14px;
+    right: 14px;
+    height: 6px;
+    border-radius: 3px;
+    background: #e5e5ea;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.slider::-webkit-slider-runnable-track {
+    height: 6px;
+    background: transparent;
+    border: none;
+}
+
+.slider::-moz-range-track {
+    height: 6px;
+    background: transparent;
+    border: none;
+}
+
+.slider-track-bg.segmented {
+    background: transparent;
+    display: flex;
+}
+
+.slider-fill {
+    height: 100%;
+    background: var(--blue);
+    border-radius: 3px;
+    transition: width 0.1s ease;
+    pointer-events: none;
+}
+
+.slider-segment         { height: 100%; }
+.slider-segment.safe    { background: var(--safe); }
+.slider-segment.alert   { background: var(--alert); }
+.slider-segment.warning { background: var(--warning); }
+.slider-segment.danger  { background: var(--danger); }
+
+.slider-labels {
+    display: flex;
+    margin-top: 2px;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text-tertiary);
+}
+
+.slider-labels span {
+    text-align: center;
+}
+
+.slider-labels-numeric {
+    justify-content: space-between;
+}
+
+
+/* ============================================
+   13. VALUE INPUT ROW
+   ============================================ */
+
+.factor-value-row {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 6px;
+}
+
+.value-input {
+    width: 58px;
+    padding: 3px 6px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 500;
+    text-align: center;
+    background: var(--bg-elevated);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    color: var(--text-primary);
+}
+
+.value-input:focus {
+    outline: none;
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px var(--blue-glow);
+}
+
+.value-unit-label {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    font-weight: 500;
+}
+
+
+/* ============================================
+   14. TOGGLE SWITCHES (binary inputs)
+   ============================================ */
+
+.toggle-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.toggle-option {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    min-width: 26px;
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 38px;
+    height: 22px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background: #e5e5ea;
+    transition: background 0.3s;
+    border-radius: 22px;
+}
+
+.toggle-slider::before {
+    content: "";
+    position: absolute;
+    height: 18px;
+    width: 18px;
+    left: 2px;
+    bottom: 2px;
+    background: white;
+    transition: transform 0.3s var(--ease-spring);
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.toggle-switch input:checked + .toggle-slider {
+    background: var(--blue);
+}
+
+.toggle-switch input:checked + .toggle-slider::before {
+    transform: translateX(16px);
+}
+
+
+/* ============================================
+   15. BETA VECTORS & WHAT-IF BADGES
+   ============================================ */
+
+.beta-vector {
+    display: inline-flex;
+    align-items: center;
+    font-size: 9px;
+    font-weight: 700;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+    cursor: help;
+    padding: 1px 5px;
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.03);
+}
+
+.beta-vector::before {
+    content: attr(data-arrow);
+    margin-right: 2px;
+    font-size: 11px;
+}
+
+.beta-vector::after {
+    content: attr(data-label);
+    font-size: 8px;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+}
+
+.beta-vector.risk-up {
+    color: var(--danger);
+    background: var(--danger-light);
+}
+
+.beta-vector.protective {
+    color: var(--safe);
+    background: var(--safe-light);
+}
+
+.beta-vector:hover { opacity: 1; }
+
+.what-if-badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 1px 6px;
+    border-radius: 5px;
+    margin-left: auto;
+    min-width: 0;
+    opacity: 0;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    transform: translateX(-4px);
+    white-space: nowrap;
+}
+
+.what-if-badge.visible {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.what-if-badge.delta-up {
+    color: var(--danger);
+    background: var(--danger-light);
+}
+
+.what-if-badge.delta-down {
+    color: var(--safe);
+    background: var(--safe-light);
+}
+
+.what-if-badge.delta-neutral {
+    color: var(--text-tertiary);
+    background: rgba(0, 0, 0, 0.04);
+}
+
+
+/* ============================================
+   15b. TOOLTIP STYLING
+   ============================================ */
+
+.info-icon {
+    font-size: 12px;
+    cursor: help;
+    margin-left: 3px;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+    position: relative;
+}
+
+.info-icon:hover {
+    opacity: 1;
+}
+
+.info-icon[data-tooltip] {
+    position: relative;
+}
+
+.info-icon[data-tooltip]:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--text-primary);
+    color: white;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 11px;
+    font-weight: 400;
+    white-space: normal;
+    max-width: 200px;
+    width: 200px;
+    text-align: left;
+    box-shadow: var(--shadow-md);
+    z-index: 1000;
+    line-height: 1.4;
+    pointer-events: none;
+}
+
+.info-icon[data-tooltip]:hover::before {
+    content: '';
+    position: absolute;
+    bottom: 115%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: var(--text-primary);
+    z-index: 1000;
+}
+
+
+/* ============================================
+   16. CENTER COLUMN CARDS
+   ============================================ */
+
+.center-card {
+    background: var(--bg-elevated);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 16px;
+    border: 1px solid var(--border);
+}
+
+.center-card:last-child {
+    margin-bottom: 0;
+}
+
+.center-card h3 {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.center-card .card-desc {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    line-height: 1.4;
+    margin-bottom: 12px;
+}
+
+/* Causality Chain Flowchart */
+.causality-chain-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.causality-chain {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px;
+    border-radius: var(--radius-sm);
+    background: rgba(0, 0, 0, 0.02);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+    flex-wrap: wrap;
+    overflow: hidden;
+}
+
+.causality-chain.highlighted {
+    background: linear-gradient(135deg, rgba(255, 59, 48, 0.1), rgba(255, 103, 35, 0.08));
+    box-shadow: 0 0 0 1px rgba(255, 59, 48, 0.2);
+}
+
+.chain-node {
+    padding: 5px 8px;
+    background: white;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    white-space: nowrap;
+    flex-shrink: 1;
+    min-width: 0;
+    font-size: 10px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Last node (Diabetes Risk) gets special styling to always fit */
+.chain-node:last-of-type {
+    flex-shrink: 0;
+    font-weight: 600;
+    color: var(--danger);
+    border-color: rgba(255, 59, 48, 0.3);
+    background: rgba(255, 59, 48, 0.04);
+}
+
+.causality-chain.highlighted .chain-node {
+    background: white;
+    border-color: rgba(255, 59, 48, 0.3);
+}
+
+.chain-arrow {
+    flex-shrink: 0;
+    color: var(--text-tertiary);
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1;
+}
+
+.causality-chain.highlighted .chain-arrow {
+    color: var(--danger);
+    font-weight: 700;
+}
+
+/* Contribution chart */
+.contribution-chart {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+
+/* ============================================
+   17. RADAR CHART
+   ============================================ */
+
+.radar-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+}
+
+#radar-svg {
+    width: 100%;
+    max-width: 260px;
+    height: auto;
+}
+
+.radar-ring {
+    fill: none;
+    stroke: var(--border);
+    stroke-width: 0.5;
+}
+
+.radar-ideal {
+    fill: rgba(52, 199, 89, 0.06);
+    stroke: var(--safe);
+    stroke-width: 1;
+    stroke-dasharray: 4 3;
+}
+
+.radar-population {
+    fill: none;
+    stroke: #a0a0a8;
+    stroke-width: 1;
+    stroke-dasharray: 3 2;
+}
+
+.radar-patient {
+    fill: rgba(0, 113, 227, 0.1);
+    stroke: var(--blue);
+    stroke-width: 2;
+    transition: d 0.3s ease;
+}
+
+.radar-dot {
+    fill: var(--blue);
+    stroke: white;
+    stroke-width: 1.5;
+    transition: cx 0.3s ease, cy 0.3s ease;
+}
+
+.radar-dot.elevated {
+    fill: var(--danger);
+    stroke: white;
+    r: 5;
+}
+
+.radar-label {
+    font-size: 9px;
+    fill: var(--text-secondary);
+    font-weight: 500;
+    text-anchor: middle;
+    dominant-baseline: central;
+}
+
+.radar-axis {
+    stroke: var(--border);
+    stroke-width: 0.5;
+}
+
+.radar-legend {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+}
+
+.radar-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: var(--text-secondary);
+}
+
+.legend-swatch {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+}
+
+.legend-swatch.ideal {
+    background: rgba(52, 199, 89, 0.3);
+    border: 1px dashed var(--safe);
+}
+
+.legend-swatch.patient {
+    background: rgba(0, 113, 227, 0.2);
+    border: 2px solid var(--blue);
+}
+
+.legend-swatch.population {
+    background: transparent;
+    border: 1px dashed #a0a0a8;
+}
+
+
+/* ============================================
+   18. TREATMENT HEATMAP (center column)
+   ============================================ */
+
+.heatmap-grid {
+    position: relative;
+    height: 200px;
+    border-radius: var(--radius);
+    overflow: visible;
+    border: 1px solid var(--border);
+}
+
+.heatmap-zones {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    height: 100%;
+    border-radius: var(--radius);
+    overflow: hidden;
+}
+
+.zone {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px;
+    text-align: center;
+    font-size: 10px;
+    font-weight: 500;
+    color: rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    line-height: 1.2;
+}
+
+.zone-1 { grid-column: 1; grid-row: 2; background: rgba(52, 199, 89, 0.55); }
+.zone-2 { grid-column: 2; grid-row: 2; background: rgba(255, 159, 10, 0.45); }
+.zone-3 { grid-column: 1; grid-row: 1; background: rgba(255, 103, 35, 0.4); }
+.zone-4 { grid-column: 3; grid-row: 2; background: rgba(255, 103, 35, 0.5); }
+.zone-5 { grid-column: 2 / 4; grid-row: 1; background: rgba(255, 59, 48, 0.45); }
+
+.heatmap-pointer {
+    position: absolute;
+    transform: translate(-50%, 50%);
+    transition: left 0.3s var(--ease-out), bottom 0.3s var(--ease-out);
+    z-index: 10;
+}
+
+.heatmap-pointer .material-icons-round {
+    font-size: 24px;
+    color: var(--blue);
+    background: white;
+    border-radius: 50%;
+    padding: 3px;
+    box-shadow: var(--shadow-md);
+    border: 2px solid var(--blue);
+}
+
+
+/* ============================================
+   19. TREATMENT RECOMMENDATIONS (right column)
+   ============================================ */
+
+#dynamic-treatments {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.treatment-ok {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background: var(--safe-light);
+    border-radius: var(--radius);
+}
+
+.treatment-ok .material-icons-round {
+    color: var(--safe);
+    font-size: 24px;
+    flex-shrink: 0;
+}
+
+.treatment-ok p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin: 0;
+    line-height: 1.4;
+}
+
+/* ============================================
+   Cross-panel factor highlight on hover
+   ============================================ */
+
+[data-field] {
+    transition: box-shadow 0.18s ease, background 0.18s ease;
+}
+
+[data-field].factor-highlight {
+    background: linear-gradient(135deg, rgba(0, 113, 227, 0.03), rgba(0, 113, 227, 0.08));
+    box-shadow: 0 0 0 2px rgba(0, 113, 227, 0.55), 0 0 12px rgba(0, 113, 227, 0.25);
+    border-radius: var(--radius);
+}
+
+.factor-treatment {
+    background: var(--bg-elevated);
+    border-radius: var(--radius);
+    padding: 14px;
+    border-left: 3px solid var(--blue);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--blue);
+}
+
+.factor-treatment.indicated {
+    border-left-color: var(--safe);
+    transition: border-left-color 0.5s ease;
+}
+
+#panel-treatment[data-risk-level="safe"]    .factor-treatment.indicated { border-left-color: var(--safe); }
+#panel-treatment[data-risk-level="alert"]   .factor-treatment.indicated { border-left-color: var(--alert); }
+#panel-treatment[data-risk-level="warning"] .factor-treatment.indicated { border-left-color: var(--warning); }
+#panel-treatment[data-risk-level="danger"]  .factor-treatment.indicated { border-left-color: var(--danger); }
+
+.factor-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.factor-header .factor-icon {
+    font-size: 18px;
+    color: var(--blue);
+    background: var(--blue-light);
+    padding: 5px;
+    border-radius: var(--radius-sm);
+}
+
+.factor-header h5 {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.factor-therapies {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.therapy-mini {
+    display: flex;
+    align-items: flex-start;
+    gap: 0;
+    padding: 8px 10px;
+    background: var(--bg-card);
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    line-height: 1.45;
+    border: 1px solid var(--border);
+}
+
+.therapy-mini strong {
+    color: var(--text-primary);
+}
+
+.indicated-heart {
+    color: var(--blue);
+    font-size: 15px;
+    flex-shrink: 0;
+    margin-top: 1px;
+    animation: pulse-heart 2s ease-in-out infinite;
+}
+
+@keyframes pulse-heart {
+    0%, 100% { transform: scale(1);    opacity: 1; }
+    50%       { transform: scale(1.12); opacity: 0.7; }
+}
+
+
+/* ============================================
+   20. TIMELINE (right column)
+   ============================================ */
+
+.timeline-section {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+}
+
+.timeline-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.timeline-header-row h3 {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.timeline-header-row h3 .material-icons-round {
+    font-size: 18px;
+    color: var(--blue);
+}
+
+.timeline-chart {
+    background: var(--bg-elevated);
+    border-radius: var(--radius);
+    padding: 12px;
+    min-height: 60px;
+    border: 1px solid var(--border);
+}
+
+.timeline-chart svg {
+    width: 100%;
+    height: 60px;
+}
+
+.timeline-empty {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    text-align: center;
+    padding: 8px;
+}
+
+.btn-snapshot {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--blue);
+    background: var(--blue-light);
+    border: none;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+    white-space: nowrap;
+}
+
+.btn-snapshot:hover {
+    background: var(--blue-glow);
+    transform: translateY(-1px);
+}
+
+.btn-snapshot .material-icons-round {
+    font-size: 14px;
+}
+
+.timeline-line {
+    fill: none;
+    stroke: var(--blue);
+    stroke-width: 2;
+}
+
+.timeline-area {
+    fill: rgba(0, 113, 227, 0.08);
+}
+
+.timeline-dot {
+    fill: var(--blue);
+    stroke: white;
+    stroke-width: 1.5;
+}
+
+.timeline-dot:hover { r: 5; }
+
+.timeline-threshold {
+    stroke: var(--danger);
+    stroke-width: 0.5;
+    stroke-dasharray: 3 2;
+    opacity: 0.5;
+}
+
+.timeline-label {
+    font-size: 9px;
+    fill: var(--text-tertiary);
+}
+
+
+/* ============================================
+   21. RESPONSIVE DESIGN
+   ============================================ */
+
+/* Tablet: stack into 2 columns then 1 */
+@media (max-width: 1100px) {
+    .main-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .col-right {
+        grid-column: 1 / -1;
+    }
+
+}
+
+@media (max-width: 768px) {
+    :root {
+        --content-padding: 12px;
+        --grid-gap: 12px;
+    }
+
+    .main-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .col-right {
+        grid-column: auto;
+    }
+
+    .risk-number { font-size: 48px; }
+    .risk-unit   { font-size: 24px; }
+
+    .hero-section {
+        padding: 16px var(--content-padding) 12px;
+    }
+
+    .nav-brand span:last-child {
+        font-size: 14px;
+    }
+
+    .panel-header-bar h2 {
+        font-size: 14px;
+    }
+
+    .heatmap-grid {
+        height: 160px;
+    }
+}
+
+@media (max-width: 480px) {
+    .nav-brand span:last-child {
+        display: none;
+    }
+
+    .risk-number { font-size: 40px; }
+    .risk-unit   { font-size: 20px; }
+
+}
+
+
+/* ============================================
+   22. LAYOUT TUNING (NO INTERNAL PANEL SCROLL)
+   ============================================ */
+
+/* Keep normal spacing so the Risk Factors panel is not over-compressed */
+.hero-section {
+    padding: 16px var(--content-padding) 14px;
+}
+
+.hero-value {
+    margin-bottom: 10px;
+}
+
+.risk-number {
+    font-size: 58px;
+}
+
+.risk-unit {
+    font-size: 28px;
+}
+
+.main-grid {
+    height: auto;
+    min-height: 0;
+    padding-top: 12px;
+    padding-bottom: 20px;
+    align-items: start;
+}
+
+/* Panels grow naturally with content; page handles scrolling */
+.col-panel {
+    display: block;
+    max-height: none;
+}
+
+.panel-body {
+    padding: 16px;
+    overflow: visible;
+}
+
+.panel-header-bar {
+    padding: 12px 16px;
+}
+
+.col-step-label {
+    padding: 6px 16px;
+    font-size: 10px;
+}
+
+/* Section collapse header layout */
+.section-collapse-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+}
+
+.section-collapse-header .section-collapse-btn {
+    width: auto;
+    padding: 4px 6px;
+    margin-bottom: 0;
+    flex-shrink: 0;
+}
+
+.section-collapse-header .input-section-label {
+    margin: 0;
+    padding: 0;
+    border-bottom: none;
+    flex: 1;
+}
+
+/* ============================================
+   23. COLLAPSIBLE SECTIONS
+   ============================================ */
+
+.section-collapse-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 8px 12px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    transition: background 0.2s, color 0.2s;
+    margin-bottom: 8px;
+}
+
+.section-collapse-btn:hover {
+    background: rgba(0, 113, 227, 0.06);
+    color: var(--blue);
+}
+
+.section-collapse-btn .material-icons-round {
+    font-size: 18px;
+    transition: transform 0.3s ease;
+}
+
+.section-collapse-btn.collapsed .material-icons-round {
+    transform: rotate(-90deg);
+}
+
+.collapsible-section {
+    overflow: visible;
+    max-height: 2000px;
+    opacity: 1;
+    transition: max-height 0.4s ease, opacity 0.3s ease;
+}
+
+.collapsible-section.collapsed {
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    margin: 0;
+    padding: 0;
+}
+
+/* Section summary for collapsed non-modifiable factors */
+.section-summary {
+    display: none;
+    padding: 6px 10px;
+    background: var(--bg-elevated);
+    border-radius: var(--radius-sm);
+    font-size: 11px;
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+    margin-bottom: 8px;
+    line-height: 1.6;
+    font-weight: 500;
+}
+
+.section-summary.visible {
+    display: block;
+}
+
+.section-summary span {
+    white-space: nowrap;
+}
+
+/* ============================================
+   24. TAB NAVIGATION (Model Column)
+   ============================================ */
+
+.model-tabs {
+    display: flex;
+    gap: 2px;
+    padding: 0 0 10px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 12px;
+}
+
+.model-tab {
+    flex: 1;
+    padding: 7px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.model-tab:hover {
+    color: var(--blue);
+    background: var(--blue-light);
+}
+
+.model-tab.active {
+    color: var(--blue);
+    background: var(--blue-light);
+    border-color: rgba(0, 113, 227, 0.2);
+    font-weight: 700;
+}
+
+.model-tab-content {
+    display: none;
+}
+
+.model-tab-content.active {
+    display: block;
+    animation: fadeIn 0.25s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Remove margin from cards inside tabs */
+.model-tab-content .center-card {
+    margin-bottom: 0;
+}
+
+/* ============================================
+   25. COMPACT INPUT GROUPS
+   ============================================ */
+
+.input-group {
+    padding: 12px 2px;
+}
+
+.input-label-row {
+    margin-bottom: 4px;
+}
+
+.factor-value-row {
+    margin-top: 4px;
+}
+
+.slider-wrapper {
+    margin: 4px 0;
+}
+
+/* Treatment extras section */
+.treatment-tools {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+}
+
+/* ============================================
+   26. RESPONSIVE OVERRIDES FOR COMPACT LAYOUT
+   ============================================ */
+
+@media (max-width: 1100px) {
+    .main-grid {
+        height: auto;
+    }
+}
+
+@media (max-width: 768px) {
+    .main-grid {
+        height: auto;
+    }
+
+    .model-tabs {
+        flex-wrap: wrap;
+    }
+}
+
+/* Force all icons to the same blue tone */
+.material-icons-round {
+    color: var(--blue) !important;
+}

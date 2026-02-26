@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diabetes Risk Calculator</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+
+    <!-- Application Stylesheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ===================== TOP NAV ===================== -->
+<nav class="top-nav">
+    <div class="nav-inner">
+        <div class="nav-brand">
+            <span class="material-icons-round">monitor_heart</span>
+            <span>Diabetes Risk Calculator</span>
+        </div>
+        <div class="nav-actions">
+            <div class="unit-toggle-nav">
+                <span class="toggle-label-nav" id="unit-label-us">US</span>
+                <label class="toggle-switch-nav" aria-label="Switch between US and SI units">
+                    <input type="checkbox" id="unit-toggle">
+                    <span class="toggle-track-nav"></span>
+                </label>
+                <span class="toggle-label-nav" id="unit-label-si">SI</span>
+            </div>
+            <button id="resetBtn" type="button" class="btn-reset" aria-label="Reset all values">
+                <span class="material-icons-round">refresh</span>
+            </button>
+        </div>
+    </div>
+</nav>
+
+<!-- ===================== HERO: RISK SCORE ===================== -->
+<section class="hero-section" id="risk-score-card">
+    <div class="hero-inner">
+        <p class="hero-label">9-Year Diabetes Risk</p>
+        <div class="hero-value" aria-live="polite">
+            <span id="risk-percentage" class="risk-number">0.0</span><span class="risk-unit">%</span>
+        </div>
+        <div class="hero-risk-bar">
+            <div class="risk-bar-track">
+                <div class="risk-bar-marker" id="risk-bar-marker"></div>
+            </div>
+            <div class="risk-bar-labels">
+                <span>Low</span>
+                <span>Moderate</span>
+                <span>High</span>
+                <span>Very High</span>
+            </div>
+        </div>
+        <button id="expandHeroBtn" type="button" class="btn-expand-hero" aria-expanded="false">
+            <span class="material-icons-round">info_outline</span>
+            <span id="expandHeroLabel">What does that mean?</span>
+            <span class="material-icons-round expand-hero-chevron">expand_more</span>
+        </button>
+        <div id="hero-expandable" class="hero-expandable">
+            <div id="icon-array" class="icon-array-container"></div>
+            <p class="icon-array-label" id="icon-array-label"></p>
+            <button id="compareScenarioBtn" type="button" class="btn-compare-scenario" aria-label="Compare scenarios">
+                <span class="material-icons-round">compare_arrows</span>
+                Compare Scenario
+            </button>
+            <div id="scenario-comparison" class="scenario-comparison-panel" style="display:none;"></div>
+            <p class="hero-subtitle">Based on the ARIC Study logistic regression model (Schmidt et al. 2005)</p>
+        </div>
+    </div>
+</section>
+
+<!-- ===================== THREE-COLUMN MAIN GRID ===================== -->
+<main class="main-grid">
+
+    <!-- ========== LEFT COLUMN: Risk Factor Inputs ========== -->
+    <section class="col-panel col-left" id="panel-input" aria-label="Risk Factor Inputs">
+        <div class="col-step-label">
+            <span>Your Values</span>
+            <span class="material-icons-round step-arrow">arrow_forward</span>
+        </div>
+        <div class="panel-header-bar">
+            <span class="material-icons-round">tune</span>
+            <h2>Risk Factors</h2>
+        </div>
+        <div class="panel-body">
+
+            <!-- Non-Modifiable Section with Collapse -->
+            <div class="section-collapse-header">
+                <button class="section-collapse-btn" data-target="non-mod-section" aria-expanded="true">
+                    <span class="material-icons-round">expand_more</span>
+                </button>
+                <div class="input-section-label">
+                    <span class="material-icons-round">lock</span>
+                    Non-Modifiable
+                </div>
+            </div>
+            <div class="section-summary" id="non-mod-summary">
+                <span id="summary-age">Age: 50</span> · <span id="summary-race">Other</span> · <span id="summary-parent">No family</span> · <span id="summary-height">66 in</span>
+            </div>
+
+            <div id="non-mod-section" class="collapsible-section">
+                <!-- Age -->
+                <div class="input-group" data-field="age">
+                    <div class="input-label-row">
+                        <label for="age-slider">
+                            <span class="material-icons-round ig-icon">calendar_today</span>
+                            Age
+                        </label>
+                        <span class="beta-vector" id="beta-vector-age"></span>
+                    </div>
+                    <div class="slider-wrapper">
+                        <input type="range" id="age-slider" min="20" max="80" value="50" step="1" class="slider">
+                        <div class="slider-track-bg" id="age-track"><div class="slider-fill" id="age-fill"></div></div>
+                    </div>
+                    <div class="slider-labels slider-labels-numeric"><span>20</span><span>50</span><span>80</span></div>
+                    <div class="factor-value-row">
+                        <input type="number" id="age-value" value="50" min="20" max="80" step="1" class="value-input">
+                        <span class="value-unit-label">years</span>
+                        <span class="what-if-badge" id="what-if-age"></span>
+                    </div>
+                </div>
+
+                <!-- Race -->
+                <div class="input-group" data-field="race">
+                    <div class="input-label-row">
+                        <label><span class="material-icons-round ig-icon">groups</span> Race</label>
+                        <span class="beta-vector" id="beta-vector-race"></span>
+                    </div>
+                    <div class="toggle-group">
+                        <span class="toggle-option">Other</span>
+                        <label class="toggle-switch"><input type="checkbox" id="race-toggle"><span class="toggle-slider"></span></label>
+                        <span class="toggle-option">Black</span>
+                    </div>
+                </div>
+
+                <!-- Parental History -->
+                <div class="input-group" data-field="parentHist">
+                    <div class="input-label-row">
+                        <label><span class="material-icons-round ig-icon">family_restroom</span> Parental Diabetes</label>
+                        <span class="beta-vector" id="beta-vector-parentHist"></span>
+                    </div>
+                    <div class="toggle-group">
+                        <span class="toggle-option">No</span>
+                        <label class="toggle-switch"><input type="checkbox" id="parentHist-toggle"><span class="toggle-slider"></span></label>
+                        <span class="toggle-option">Yes</span>
+                    </div>
+                </div>
+
+                <!-- Height -->
+                <div class="input-group" data-field="height">
+                    <div class="input-label-row">
+                        <label for="height-slider"><span class="material-icons-round ig-icon">height</span> Height <span class="unit-label" id="height-unit">(in)</span></label>
+                        <span class="beta-vector" id="beta-vector-height"></span>
+                    </div>
+                    <div class="slider-wrapper">
+                        <input type="range" id="height-slider" min="48" max="84" value="66" step="1" class="slider">
+                        <div class="slider-track-bg"><div class="slider-fill" id="height-fill"></div></div>
+                    </div>
+                    <div class="slider-labels slider-labels-numeric"><span id="height-min">48</span><span id="height-mid">66</span><span id="height-max">84</span></div>
+                    <div class="factor-value-row">
+                        <input type="number" id="height-value" value="66" min="48" max="84" step="1" class="value-input">
+                        <span class="value-unit-label" id="height-value-unit">in</span>
+                        <span class="what-if-badge" id="what-if-height"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modifiable Section -->
+            <div class="input-section-label modifiable">
+                <span class="material-icons-round">tune</span>
+                Modifiable
+            </div>
+
+            <div id="mod-section" class="collapsible-section">
+
+            <!-- Fasting Glucose -->
+            <div class="input-group" data-field="fastGlu">
+                <div class="input-label-row">
+                    <label for="fastGlu-slider"><span class="material-icons-round ig-icon icon-danger">bloodtype</span> Fasting Glucose <span class="unit-label" id="fastGlu-unit">(mg/dL)</span></label>
+                    <span class="beta-vector" id="beta-vector-fastGlu"></span>
+                </div>
+                <div class="strongest-badge">Strongest Predictor</div>
+                <div class="slider-wrapper">
+                    <input type="range" id="fastGlu-slider" min="50" max="300" value="95" step="1" class="slider">
+                    <div class="slider-track-bg segmented" id="fastGlu-track">
+                        <div class="slider-segment safe" style="flex:50"></div>
+                        <div class="slider-segment alert" style="flex:26"></div>
+                        <div class="slider-segment danger" style="flex:174"></div>
+                    </div>
+                </div>
+                <div class="slider-labels"><span style="flex:50">Normal</span><span style="flex:26">Pre-Diab.</span><span style="flex:174">Diabetes</span></div>
+                <div class="factor-value-row">
+                    <input type="number" id="fastGlu-value" value="95" min="50" max="300" step="1" class="value-input">
+                    <span class="value-unit-label" id="fastGlu-value-unit">mg/dL</span>
+                    <span class="what-if-badge" id="what-if-fastGlu"></span>
+                </div>
+            </div>
+
+            <!-- Waist -->
+            <div class="input-group" data-field="waist">
+                <div class="input-label-row">
+                    <label for="waist-slider"><span class="material-icons-round ig-icon">straighten</span> Waist <span class="unit-label" id="waist-unit">(in)</span></label>
+                    <span class="beta-vector" id="beta-vector-waist"></span>
+                </div>
+                <div class="slider-wrapper">
+                    <input type="range" id="waist-slider" min="25" max="60" value="36" step="1" class="slider">
+                    <div class="slider-track-bg segmented" id="waist-track">
+                        <div class="slider-segment safe" style="flex:12"></div>
+                        <div class="slider-segment alert" style="flex:3"></div>
+                        <div class="slider-segment danger" style="flex:20"></div>
+                    </div>
+                </div>
+                <div class="slider-labels slider-labels-numeric"><span id="waist-min">25</span><span id="waist-mid">42</span><span id="waist-max">60</span></div>
+                <div class="factor-value-row">
+                    <input type="number" id="waist-value" value="36" min="25" max="60" step="1" class="value-input">
+                    <span class="value-unit-label" id="waist-value-unit">in</span>
+                    <span class="what-if-badge" id="what-if-waist"></span>
+                </div>
+            </div>
+
+            <!-- SBP -->
+            <div class="input-group" data-field="sbp">
+                <div class="input-label-row">
+                    <label for="sbp-slider"><span class="material-icons-round ig-icon">favorite</span> Blood Pressure <span class="unit-label">(mmHg)</span></label>
+                    <span class="beta-vector" id="beta-vector-sbp"></span>
+                </div>
+                <div class="slider-wrapper">
+                    <input type="range" id="sbp-slider" min="80" max="220" value="120" step="1" class="slider">
+                    <div class="slider-track-bg segmented" id="sbp-track">
+                        <div class="slider-segment safe" style="flex:50"></div>
+                        <div class="slider-segment alert" style="flex:10"></div>
+                        <div class="slider-segment warning" style="flex:20"></div>
+                        <div class="slider-segment danger" style="flex:60"></div>
+                    </div>
+                </div>
+                <div class="slider-labels"><span style="flex:50">Normal</span><span style="flex:10;text-align:right">Elev.</span><span style="flex:20;text-align:left;padding-left:2px">Stg1</span><span style="flex:60">Stage 2</span></div>
+                <div class="factor-value-row">
+                    <input type="number" id="sbp-value" value="120" min="80" max="220" step="1" class="value-input">
+                    <span class="value-unit-label">mmHg</span>
+                    <span class="what-if-badge" id="what-if-sbp"></span>
+                </div>
+            </div>
+
+            <!-- HDL -->
+            <div class="input-group" data-field="cholHDL">
+                <div class="input-label-row">
+                    <label for="cholHDL-slider"><span class="material-icons-round ig-icon icon-safe">water_drop</span> HDL Cholesterol <span class="unit-label" id="cholHDL-unit">(mg/dL)</span></label>
+                    <span class="beta-vector" id="beta-vector-cholHDL"></span>
+                </div>
+                <div class="slider-wrapper">
+                    <input type="range" id="cholHDL-slider" min="20" max="100" value="50" step="1" class="slider">
+                    <div class="slider-track-bg segmented" id="cholHDL-track">
+                        <div class="slider-segment danger" style="flex:20"></div>
+                        <div class="slider-segment alert" style="flex:19"></div>
+                        <div class="slider-segment safe" style="flex:61"></div>
+                    </div>
+                </div>
+                <div class="slider-labels"><span style="flex:20">Low</span><span style="flex:19;text-align:left;padding-left:2px">Brdl.</span><span style="flex:61">Normal</span></div>
+                <div class="factor-value-row">
+                    <input type="number" id="cholHDL-value" value="50" min="20" max="100" step="1" class="value-input">
+                    <span class="value-unit-label" id="cholHDL-value-unit">mg/dL</span>
+                    <span class="what-if-badge" id="what-if-cholHDL"></span>
+                </div>
+            </div>
+
+            <!-- Triglycerides -->
+            <div class="input-group" data-field="cholTri">
+                <div class="input-label-row">
+                    <label for="cholTri-slider"><span class="material-icons-round ig-icon">science</span> Triglycerides <span class="unit-label" id="cholTri-unit">(mg/dL)</span></label>
+                    <span class="beta-vector" id="beta-vector-cholTri"></span>
+                </div>
+                <div class="slider-wrapper">
+                    <input type="range" id="cholTri-slider" min="50" max="500" value="150" step="1" class="slider">
+                    <div class="slider-track-bg segmented" id="cholTri-track">
+                        <div class="slider-segment safe" style="flex:100"></div>
+                        <div class="slider-segment alert" style="flex:53"></div>
+                        <div class="slider-segment warning" style="flex:47"></div>
+                        <div class="slider-segment danger" style="flex:250"></div>
+                    </div>
+                </div>
+                <div class="slider-labels"><span style="flex:100">Normal</span><span style="flex:100">Borderline</span><span style="flex:250">High</span></div>
+                <div class="factor-value-row">
+                    <input type="number" id="cholTri-value" value="150" min="50" max="500" step="1" class="value-input">
+                    <span class="value-unit-label" id="cholTri-value-unit">mg/dL</span>
+                    <span class="what-if-badge" id="what-if-cholTri"></span>
+                </div>
+            </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ========== CENTER COLUMN: Model Visualization ========== -->
+    <section class="col-panel col-center" id="panel-model" aria-label="Model Visualization">
+        <div class="col-step-label">
+            <span>Model</span>
+            <span class="material-icons-round step-arrow">arrow_forward</span>
+        </div>
+        <div class="panel-header-bar">
+            <span class="material-icons-round">insights</span>
+            <h2>Model Weights</h2>
+        </div>
+        <div class="panel-body">
+
+            <!-- Model Tabs Navigation -->
+            <div class="model-tabs">
+                <button class="model-tab active" data-tab="contributions">Contributions</button>
+                <button class="model-tab" data-tab="radar">Risk Profile</button>
+                <button class="model-tab" data-tab="causality">Connections</button>
+            </div>
+
+            <!-- Tab Content: Contributions -->
+            <div class="model-tab-content active" id="tab-contributions">
+                <h3>Factor Contributions</h3>
+                <p class="card-desc">Percentage each factor contributes to your overall risk deviation from the population mean.</p>
+                <div class="contribution-chart" id="contribution-chart" role="img" aria-label="Risk factor contribution chart"></div>
+            </div>
+
+            <!-- Tab Content: Radar -->
+            <div class="model-tab-content" id="tab-radar">
+                <h3>Risk Profile Shape</h3>
+                <p class="card-desc">Symmetric hexagon = healthy baseline. Distortion = deviation.</p>
+                <div class="radar-container">
+                    <svg id="radar-svg" viewBox="0 0 300 300" aria-label="Radar chart"></svg>
+                </div>
+                <div class="radar-legend">
+                    <div class="radar-legend-item"><span class="legend-swatch ideal"></span><span>Ideal</span></div>
+                    <div class="radar-legend-item"><span class="legend-swatch population"></span><span>Population Avg</span></div>
+                    <div class="radar-legend-item"><span class="legend-swatch patient"></span><span>You</span></div>
+                </div>
+            </div>
+
+            <!-- Tab Content: Causality -->
+            <div class="model-tab-content" id="tab-causality">
+                <h3>How Your Risk Factors Connect</h3>
+                <p class="card-desc">See the causal chains from your risk factors through biological mechanisms to disease risk.</p>
+                <div id="causality-chain" class="causality-chain-container"></div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ========== RIGHT COLUMN: Treatment Recommendations ========== -->
+    <section class="col-panel col-right" id="panel-treatment" aria-label="Treatment Recommendations">
+        <div class="col-step-label">
+            <span>Possible Treatment</span>
+        </div>
+        <div class="panel-header-bar">
+            <span class="material-icons-round">medical_services</span>
+            <h2>Treatment</h2>
+        </div>
+        <div class="panel-body">
+            <div id="dynamic-treatments" role="region" aria-live="polite" aria-label="Dynamic treatment recommendations">
+                <!-- Populated by calculator.js -->
+            </div>
+
+            <!-- Treatment Tools: Zone Map & Timeline Collapsible -->
+            <div class="treatment-tools">
+                <button class="section-collapse-btn" data-target="treatment-extras" aria-expanded="false">
+                    <span class="material-icons-round">expand_more</span>
+                    <span>Zone Map &amp; Timeline</span>
+                </button>
+                <div id="treatment-extras" class="collapsible-section collapsed">
+                    <!-- Treatment Zone Map -->
+                    <div class="center-card">
+                        <h3>Treatment Zone Map</h3>
+                        <p class="card-desc">Glucose (x) vs. other factors (y) determines your treatment zone.</p>
+                        <div class="heatmap-grid" id="heatmap-grid">
+                            <div class="heatmap-zones">
+                                <div class="zone zone-1"><span>Low risk<br>Healthy lifestyle</span></div>
+                                <div class="zone zone-2"><span>Lifestyle changes</span></div>
+                                <div class="zone zone-3"><span>Metformin + lifestyle</span></div>
+                                <div class="zone zone-4"><span>High glucose<br>Evaluation needed</span></div>
+                                <div class="zone zone-5"><span>High risk<br>GLP-1 / SGLT2</span></div>
+                            </div>
+                            <div class="heatmap-pointer" id="heatmap-pointer"><span class="material-icons-round">my_location</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Timeline -->
+                    <div class="timeline-section">
+                        <div class="timeline-header-row">
+                            <h3><span class="material-icons-round">timeline</span> Timeline</h3>
+                            <button id="snapshotBtn" type="button" class="btn-snapshot">
+                                <span class="material-icons-round">add_circle_outline</span> Snapshot
+                            </button>
+                        </div>
+                        <div class="timeline-chart" id="timeline-chart">
+                            <p class="timeline-empty">No snapshots yet.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+</main>
+
+<!-- Application Script -->
+<script src="calculator.js"></script>
+</body>
+</html>
